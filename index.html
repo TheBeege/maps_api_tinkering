@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Drawing tools</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>area</h1>
+    <p id="area">area</p>
+    <div id="map"></div>
+    <script>
+      function polygonArea(X, Y, numPoints) {
+        var area = 0;         // Accumulates area in the loop
+        var j = numPoints-1;  // The last vertex is the 'previous' one to the first
+
+        for (var i=0; i<numPoints; i++) {
+          area = area +  (X[j]+X[i]) * (Y[j]-Y[i]);
+          j = i;  //j is previous vertex to i
+        }
+        return area/2;
+      }
+
+
+      // This example requires the Drawing library. Include the libraries=drawing
+      // parameter when you first load the API. For example:
+      // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=drawing">
+
+      function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: -34.397, lng: 150.644},
+          zoom: 8
+        });
+
+        var drawingManager = new google.maps.drawing.DrawingManager({
+          drawingMode: google.maps.drawing.OverlayType.MARKER,
+          drawingControl: true,
+          drawingControlOptions: {
+            position: google.maps.ControlPosition.TOP_CENTER,
+            drawingModes: ['marker', 'circle', 'polygon', 'polyline', 'rectangle']
+          },
+          markerOptions: {icon: 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png'},
+          circleOptions: {
+            fillColor: '#ffff00',
+            fillOpacity: 1,
+            strokeWeight: 5,
+            clickable: false,
+            editable: true,
+            zIndex: 1
+          }
+        });
+        drawingManager.setMap(map);
+
+        drawingManager.addListener('overlaycomplete', function(completeEvent) {
+          console.log("overlay complete");
+          if(completeEvent.type == google.maps.drawing.OverlayType.POLYGON) {
+            console.log("was polgyon");
+            console.log("paths:");
+            var paths = completeEvent.overlay.getPath();
+            var lats = [];
+            var lngs = [];
+            paths.forEach(function(point, idx){
+              console.log("lat: " + point.lat() + " -- lng: " + point.lng());
+              lats.push(point.lat()+90); // we want to work in absolute coords
+              lngs.push(point.lng());
+            });
+
+            var googleArea = google.maps.geometry.spherical.computeArea(paths);
+            console.log("google area: " + googleArea);
+            document.getElementById("area").innerHTML = googleArea + " m<sup>2</sup>";
+          }
+        });
+      }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOie5eh3XS_5RCVRAvCT1JKgfIKb13F-w&libraries=drawing&callback=initMap"
+         async defer></script>
+  </body>
+</html>
